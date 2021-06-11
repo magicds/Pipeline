@@ -79,7 +79,7 @@ class Pipeline {
     });
   }
 
-  private sendRequest(data: IncomingMessageData, callback?: () => {}) {
+  private sendRequest(data: IncomingMessageData, callback?: () => {}):Promise<any> {
     const request = new MessageRequest(this.target, data, this.option);
     const id = request.id;
     this.store[id] = {};
@@ -97,7 +97,14 @@ class Pipeline {
       this.store[id].resolve = resolve;
     });
   }
-  exec(fun: string, arg: any, callback?: () => {}) {
+  /**
+   * 执行一个方法并获取返回结果
+   * @param {string} fun 要执行的方法名
+   * @param {Object | Object[]} arg 要传递给待执行方法的参数，多个参数用数组表示。 每个参数必须是可序列化的
+   * @param {(error, any) => any} callback (可选)执行成功或失败的回调
+   * @returns {Promise<any>} 含方法调用执行结果的 Promise 
+   */
+  exec(fun: string, arg: Object | Object[], callback?: () => {}) {
     const data = {
       pipelineId: this._id,
       type: 'exec_request',

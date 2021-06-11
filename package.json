@@ -11,11 +11,11 @@
     "node": ">=10"
   },
   "scripts": {
-    "start": "tsdx watch --name Pipeline --format umd",
-    "build": "tsdx build --name Pipeline --format umd",
+    "start": "tsdx watch --name Pipeline --format cjs,esm,umd",
+    "build": "tsdx build --name Pipeline --format cjs,esm,umd",
     "test": "tsdx test",
     "lint": "tsdx lint",
-    "prepare": "tsdx build --name Pipeline --format umd",
+    "prepare": "tsdx build --name Pipeline --format cjs,esm,umd",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
