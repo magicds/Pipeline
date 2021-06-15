@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo</title>
+</head>
+
+<body>
+    <h1>demo</h1>
+
+    <div>
+        <button onclick="exec_inner()">调用内部的方法</button>
+        <button onclick="exec_inner2()">调用内部的方法并获取结果</button>
+
+        <button>调用内部异步方法并获取结果</button>
+        <p></p>
+        <button onclick="get_value()">获取内部变量obj.name的值</button>
+        <button onclick="set_value()">修改内部变量obj.name的值</button>
+    </div>
+    <iframe id="iframe" src="iframe.html"></iframe>
+
+    <div>
+        <button onclick="worker_exec()">调用worker中的方法</button>
+    </div>
+    <script src="../dist/pipeline.umd.development.js"></script>
+    <script>
+        var p = new Pipeline(document.getElementById('iframe').contentWindow);
+
+        function exec_inner() {
+            p.exec('inner', window.prompt('请输入内容', '外部参数'));
+        }
+        function exec_inner2() {
+            p.exec('inner2', window.prompt('请输入内容', '外部参数')).then(function (data) {
+                alert('内部输入框的值是：' + data);
+            });
+        }
+
+        function get_value() {
+            p.get('obj.name').then(function (data) {
+                alert('内部变量obj.name的值为:' + data);
+            });
+        }
+
+        function set_value() {
+            p.set('obj.name', window.prompt('请输入新的obj.name的值', new Date().toString())).then(function () {
+                alert('修改成功，再次获取看看吧');
+            });
+        }
+
+    </script>
+    <script>
+        // work 中的支持 ==============================
+        var workerJs = new Worker('./worker.js');
+        var p2 = new Pipeline(workerJs);
+        Pipeline.initWorkerListen(workerJs);
+
+        function worker_exec() {
+            p2.exec('Util.genderRandomArray', window.prompt('请输入要生成随机数组的长度', '1000000')).then(function (data) {
+                alert('随机数组生产成功，请在控制台查看');
+                console.log(data);
+            });
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iframe</title>
+</head>
+
+<body>
+    <button id="inner_btn">内部按钮</button>
+    <input type="text" id="input" value="这是内部页面的输入框">
+    <script src="../dist/pipeline.umd.development.js"></script>
+    <script>
+
+        var obj = {
+            name: 'inner',
+            des: '这是内部的一个变量',
+            el: document.getElementById('inner_btn')
+        };
+
+        function inner(str) {
+            var txt = document.createTextNode(str)
+            var el = document.createElement('p');
+            el.textContent = '内部inner方法被调用: ';
+            el.appendChild(txt);
+            document.body.insertAdjacentElement('afterbegin', el);
+        }
+
+        function inner2(str) {
+            var txt = document.createTextNode(str)
+            var el = document.createElement('p');
+            el.textContent = '内部inner2方法被调用: ';
+            el.appendChild(txt);
+            document.body.insertAdjacentElement('afterbegin', el);
+
+            return document.getElementById('input').value;
+        }
+
+    </script>
+</body>
+
+</html>

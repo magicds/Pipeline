@@ -15,14 +15,17 @@ function handleMessageIn(ev: MessageEvent) {
     handle(ev.data, ev);
   });
 }
-window.addEventListener('message', function(ev) {
+
+function listen(ev: MessageEvent) {
   const data = ev.data;
   console.log(data);
   // if (data && /^epoint/.test(data.type)) {
   if (data && data.pipeline && data.type) {
     handleMessageIn(ev);
   }
-});
+}
+// eslint-disable-next-line
+(self || window).addEventListener('message', listen);
 
 new Server(handles);
 
@@ -44,6 +47,10 @@ class Pipeline {
   };
 
   static instance: any = {};
+
+  static initWorkerListen(worker: Worker) {
+    worker.addEventListener('message', listen);
+  }
 
   constructor(target: WindowProxy, option: MessageRequestOptions = {}) {
     // 单例 避免对一个对象多次创建
@@ -73,13 +80,16 @@ class Pipeline {
 
   initListener() {
     handles.push((data: ResponseMessageData) => {
-      if (data.pipelineId === this._id) {
+      if (data.pipeline === this._id) {
         this._handleResponse(data);
       }
     });
   }
 
-  private sendRequest(data: IncomingMessageData, callback?: () => {}):Promise<any> {
+  private sendRequest(
+    data: IncomingMessageData,
+    callback?: () => {}
+  ): Promise<any> {
     const request = new MessageRequest(this.target, data, this.option);
     const id = request.id;
     this.store[id] = {};
@@ -89,7 +99,7 @@ class Pipeline {
     }
 
     return new Promise((resolve, reject) => {
-      // 发送请求 
+      // 发送请求
       // todo DOMException 异常
       request.send();
       // 记录
@@ -102,11 +112,11 @@ class Pipeline {
    * @param {string} fun 要执行的方法名
    * @param {Object | Object[]} arg 要传递给待执行方法的参数，多个参数用数组表示。 每个参数必须是可序列化的
    * @param {(error, any) => any} callback (可选)执行成功或失败的回调
-   * @returns {Promise<any>} 含方法调用执行结果的 Promise 
+   * @returns {Promise<any>} 含方法调用执行结果的 Promise
    */
   exec(fun: string, arg: Object | Object[], callback?: () => {}) {
     const data = {
-      pipelineId: this._id,
+      pipeline: this._id,
       type: 'exec_request',
       fun,
       arg,
@@ -115,13 +125,13 @@ class Pipeline {
   }
 
   get(property: string, callback?: () => {}) {
-    const data = { pipelineId: this._id, type: 'get', property };
+    const data = { pipeline: this._id, type: 'get_request', property };
     return this.sendRequest(data, callback);
   }
 
   set(property: string, value: any, callback?: () => {}) {
     const data = {
-      pipelineId: this._id,
+      pipeline: this._id,
       type: 'set_request',
       property,
       value,

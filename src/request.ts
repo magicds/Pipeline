@@ -22,9 +22,19 @@ class MessageRequest {
     this.id = `${data.type || ''}_${MessageRequest.index++}`;
     this.data = data;
     this.data.id = this.id;
-    this.data.pipeline = true;
+    this.data.pipeline = data.pipeline;
   }
   send() {
+    const isWorker = this.target instanceof window.Worker;
+    if (isWorker) {
+      if (this.option.transfer) {
+        this.target.postMessage(this.data, this.option.transfer);
+      } else {
+        this.target.postMessage(this.data);
+      }
+      return;
+    }
+
     if (this.option.transfer) {
       this.target.postMessage(
         this.data,

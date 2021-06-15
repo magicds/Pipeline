@@ -7,13 +7,14 @@ export enum RequestState {
 
 interface BaseMessageData {
   readonly id: string;
-  readonly pipelineId: string;
+  pipeline: string;
 }
 
 export interface RequestMessageData extends BaseMessageData {
   type: string;
+  // fun?: string;
 
-  pipeline: true;
+  // property?: string;
 
   [propName: string]: any;
 }
@@ -23,11 +24,10 @@ export interface ResponseMessageData extends BaseMessageData {
   state: RequestState;
   result?: any;
   error?: any;
-  pipeline: true;
 }
 
 export interface IncomingMessageData {
-  readonly pipelineId: string;
+  readonly pipeline: string;
   type: string;
 
   [propName: string]: any;
