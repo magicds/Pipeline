@@ -1,5 +1,6 @@
 import {
   RequestState,
+  RequestMessageData,
   ResponseMessageData,
   IncomingMessageData,
   MessageRequestOptions,
@@ -121,6 +122,12 @@ class Pipeline {
         // console.log(this.store[id].data);
         log(request.data);
       }
+      // 超时 处理
+      if (this.option.timeout) {
+        this.store[id].timer = setTimeout(() => {
+          this._handleTimeout(request.data);
+        }, this.option.timeout);
+      }
     });
   }
   /**
@@ -143,7 +150,7 @@ class Pipeline {
    * 获取属性值
    * @param {string} property 属性路径
    * @param {undefined | (error, result)=>{}} callback 回调函数
-   * @returns 
+   * @returns
    */
   get(property: string, callback?: () => {}) {
     const data = { pipeline: this._id, type: 'get_request', property };
@@ -173,6 +180,10 @@ class Pipeline {
       // console.log(this.store[id].data);
       log(data);
     }
+    if (item.timer) {
+      clearTimeout(item.timer);
+      item.timer = null;
+    }
     try {
       if (item.callback) {
         if (state === RequestState.SUCCESS) {
@@ -193,6 +204,18 @@ class Pipeline {
 
     item = null;
     delete this.store[id];
+  }
+
+  // 调用超时处理
+  _handleTimeout(requestData: RequestMessageData) {
+    // const item = this.store[id];
+    this._handleResponse({
+      id: requestData.id,
+      pipeline: requestData.pipeline,
+      type: requestData.type.replace(/request$/, 'response'),
+      state: RequestState.ERROR,
+      error: new Error('调用超时'),
+    });
   }
 }
 
