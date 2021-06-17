@@ -11,6 +11,7 @@
 <body>
     <h1>demo</h1>
 
+    <button onclick="toggleDebug(this)">开启调试模式</button>
     <div>
         <button onclick="exec_inner()">调用内部的方法</button>
         <button onclick="exec_inner2()">调用内部的方法并获取结果</button>
@@ -28,6 +29,26 @@
     <script src="../dist/pipeline.umd.development.js"></script>
     <script>
         var p = new Pipeline(document.getElementById('iframe').contentWindow);
+        Pipeline.validate = function (ev, request) {
+            return false;
+            console.log(ev);
+            // eg 只针对 http://192.168.56.1:1212 源提供服务
+            if (ev.origin === 'http://192.168.56.1:1212') {
+                return true;
+            }
+
+            return false;
+        };
+        function toggleDebug(btn) {
+            if (p.debug) {
+                p.debug = p2.debug = false;
+                btn.textContent = '开启调试模式'
+            } else {
+                p.debug = p2.debug = true;
+                btn.textContent = '关闭调试模式'
+            }
+        }
+
 
         function exec_inner() {
             p.exec('inner', window.prompt('请输入内容', '外部参数'));

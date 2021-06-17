@@ -1,6 +1,5 @@
 import {
   RequestState,
-  // RequestMessageData,
   ResponseMessageData,
   IncomingMessageData,
   MessageRequestOptions,
@@ -11,6 +10,14 @@ import MessageRequest from './request';
 
 const handles: any[] = [];
 function handleMessageIn(ev: MessageEvent) {
+  // 针对服务来源进行校验 return false 则不提供服务
+  if (
+    typeof Pipeline.validate === 'function' &&
+    /request$/.test(ev.data.type) &&
+    !Pipeline.validate(ev)
+  ) {
+    return;
+  }
   handles.forEach(handle => {
     handle(ev.data, ev);
   });
@@ -18,9 +25,9 @@ function handleMessageIn(ev: MessageEvent) {
 
 function listen(ev: MessageEvent) {
   const data = ev.data;
-  console.log(data);
   // if (data && /^epoint/.test(data.type)) {
   if (data && data.pipeline && data.type) {
+    // log(data);
     handleMessageIn(ev);
   }
 }
@@ -40,6 +47,9 @@ class Pipeline {
   _id: string = '1';
   store: Store = {};
   option: MessageRequestOptions = Pipeline.defaultOption;
+  debug: boolean = false;
+
+  static validate: null | Function = null;
 
   static defaultOption = {
     target: '*',
@@ -103,8 +113,14 @@ class Pipeline {
       // todo DOMException 异常
       request.send();
       // 记录
+      // this.store[id].data = { request: request.data };
       this.store[id].reject = reject;
       this.store[id].resolve = resolve;
+
+      if (this.debug) {
+        // console.log(this.store[id].data);
+        log(request.data);
+      }
     });
   }
   /**
@@ -123,7 +139,12 @@ class Pipeline {
     };
     return this.sendRequest(data, callback);
   }
-
+  /**
+   * 获取属性值
+   * @param {string} property 属性路径
+   * @param {undefined | (error, result)=>{}} callback 回调函数
+   * @returns 
+   */
   get(property: string, callback?: () => {}) {
     const data = { pipeline: this._id, type: 'get_request', property };
     return this.sendRequest(data, callback);
@@ -147,7 +168,11 @@ class Pipeline {
     const { id, result, state, error } = data;
 
     let item = this.store[id];
-
+    // item.data.response = data;
+    if (this.debug) {
+      // console.log(this.store[id].data);
+      log(data);
+    }
     try {
       if (item.callback) {
         if (state === RequestState.SUCCESS) {
@@ -173,3 +198,60 @@ class Pipeline {
 
 export default Pipeline;
 // export { Pipeline };
+
+const typeStyle: any = {
+  exec_request: 'background:#3472d7;color:#fff;border-radius:2px',
+  exec_response: 'background:#5d8edf;color:#fff;border-radius:2px',
+
+  get_request: 'background:#3cb657;color:#fff;border-radius:2px',
+  get_response: 'background:#63c579;color:#fff;border-radius:2px',
+
+  set_request: 'background:#fb9227;color:#fff;border-radius:2px',
+  set_response: 'background:#ff7471;color:#fff;border-radius:2px',
+};
+function log(data: any) {
+  let arg;
+  switch (data.type) {
+    case 'exec_request':
+      arg = data.fun;
+      break;
+    case 'exec_response':
+      arg = data.result;
+      break;
+    case 'set_request':
+    case 'get_request':
+      arg = data.property;
+      break;
+    case 'get_response':
+    case 'set_response':
+      arg = data.result;
+      break;
+
+    default:
+      break;
+  }
+  if (/response$/.test(data.type)) {
+    console.log(
+      `%c Pipeline %c ${data.type} %c ${data.state} %c %o`,
+      'background:#00bcd4; color:#fff; border-radius: 2px; margin-right: 4px;',
+      typeStyle[data.type],
+      'color:#fff; margin: 2px;' +
+        (data.state === 'success'
+          ? 'background:#3cb657;'
+          : 'background:#ff514e;'),
+      'color:#333;',
+      arg,
+      data
+    );
+  } else {
+    console.log(
+      `%c Pipeline %c ${data.type} %c %o`,
+      'background:#00bcd4; color:#fff; border-radius: 2px; margin-right: 4px;',
+
+      typeStyle[data.type],
+      'color:#333;',
+      arg,
+      data
+    );
+  }
+}

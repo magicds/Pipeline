@@ -14,10 +14,27 @@
     <script src="../dist/pipeline.umd.development.js"></script>
     <script>
 
+
+        // 做为服务端的验证， 可判断是否对请求做出回应
+        Pipeline.validate = function (ev, request) {
+            // eg 只针对 http://192.168.56.1:1212 源提供服务
+            if (ev.origin === 'http://192.168.56.1:1212') {
+                return true;
+            }
+
+            console.log(ev);
+            return false;
+        };
+
         var obj = {
             name: 'inner',
             des: '这是内部的一个变量',
-            el: document.getElementById('inner_btn')
+            regexp: /^1\d{10}$/,
+            date: new Date(),
+
+            // 下面这些属性无法被传输，因此无法被获取
+            el: document.getElementById('inner_btn'),
+            print: function () { }
         };
 
         function inner(str) {
@@ -36,6 +53,10 @@
             document.body.insertAdjacentElement('afterbegin', el);
 
             return document.getElementById('input').value;
+        }
+
+        function asyncFunction(params) {
+
         }
 
     </script>

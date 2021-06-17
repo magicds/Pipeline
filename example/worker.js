@@ -16,8 +16,3 @@ Util = {
     return arr;
   },
 };
-
-// setTimeout(() => {
-//   self.postMessage({ a: 1 });
-//   self.postMessage('abc');
-// }, 2000);
