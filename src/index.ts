@@ -156,7 +156,13 @@ class Pipeline {
     const data = { pipeline: this._id, type: 'get_request', property };
     return this.sendRequest(data, callback);
   }
-
+  /**
+   * 设置属性值
+   * @param {string} property 要设置的属性路径， eg: "someObject.someProperty
+   * @param {any} value 要设置的属性的值
+   * @param {undefined | (err, any)=> {}} callback 设置成功的回调函数
+   * @returns
+   */
   set(property: string, value: any, callback?: () => {}) {
     const data = {
       pipeline: this._id,

@@ -16,7 +16,7 @@
 
 
         // 做为服务端的验证， 可判断是否对请求做出回应
-        Pipeline.validate = function (ev, request) {
+        /*Pipeline.validate = function (ev, request) {
             // eg 只针对 http://192.168.56.1:1212 源提供服务
             if (ev.origin === 'http://192.168.56.1:1212') {
                 return true;
@@ -24,7 +24,7 @@
 
             console.log(ev);
             return false;
-        };
+        };*/
 
         var obj = {
             name: 'inner',
@@ -34,10 +34,26 @@
 
             // 下面这些属性无法被传输，因此无法被获取
             el: document.getElementById('inner_btn'),
-            print: function () { }
+            print: function (arg) {
+                alert('print 方法被调用， 参数为：' + (arg ? arg : ''));
+            }
         };
 
-        function inner(str) {
+        var pageInterface = {
+            getRemoteData: function (params) {
+                return Util.ajax({
+                    url: 'xxx',
+                    data: $.extend({
+                        pageUrl: location.href
+                    }, params)
+                });
+            },
+            save: function name(params) {
+
+            }
+        };
+
+        function log(str) {
             var txt = document.createTextNode(str)
             var el = document.createElement('p');
             el.textContent = '内部inner方法被调用: ';
@@ -45,7 +61,7 @@
             document.body.insertAdjacentElement('afterbegin', el);
         }
 
-        function inner2(str) {
+        function log2(str) {
             var txt = document.createTextNode(str)
             var el = document.createElement('p');
             el.textContent = '内部inner2方法被调用: ';

@@ -29,7 +29,7 @@
     <script src="../dist/pipeline.umd.development.js"></script>
     <script>
         var p = new Pipeline(document.getElementById('iframe').contentWindow);
-        Pipeline.validate = function (ev, request) {
+        /*Pipeline.validate = function (ev, request) {
             return false;
             console.log(ev);
             // eg 只针对 http://192.168.56.1:1212 源提供服务
@@ -39,6 +39,7 @@
 
             return false;
         };
+        */
         function toggleDebug(btn) {
             if (p.debug) {
                 p.debug = p2.debug = false;
@@ -51,10 +52,10 @@
 
 
         function exec_inner() {
-            p.exec('inner', window.prompt('请输入内容', '外部参数'));
+            p.exec('log', window.prompt('请输入内容', '外部参数'));
         }
         function exec_inner2() {
-            p.exec('inner2', window.prompt('请输入内容', '外部参数')).then(function (data) {
+            p.exec('log2', window.prompt('请输入内容', '外部参数')).then(function (data) {
                 alert('内部输入框的值是：' + data);
             });
         }
@@ -84,6 +85,29 @@
                 console.log(data);
             });
         };
+    </script>
+
+    <script src="./md.js"></script>
+    <script>
+        function htmlEscape(html) {
+            if (html + '' !== html) return html;
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(html));
+            var s = div.innerHTML;
+            div = null;
+            return s;
+        };
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+            console.log(xhr);
+            var txt = document.createElement('textarea');
+            txt.setAttribute('md-auto', '');
+            txt.value = xhr.responseText;
+            document.body.appendChild(txt);
+            autoRender();
+        }
+        xhr.open('GET', '../README.md?T=' + +new Date());
+        xhr.send()
     </script>
 </body>
 

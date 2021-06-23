@@ -31,14 +31,63 @@
 exec(fun, arg, callback)
 ```
 
+示例1: 调用 B 页面的 `obj.print` 方法。
+
+```js
+pageB_Server.exec('obj.print', '来自A页面的调用', function (err, result) {
+   // err 为调用过程是否出错，如果调用正常则为 null 否则为错误信息
+   // result 为实际调用方法的返回值
+});
+
+// 更推荐写为 promise 形式
+pageB_Server.exec('obj.print', '来自A页面的调用').then(function (result) {
+   // 调用结果为 result
+}).catch(function (err) {
+   // 调用出错
+});
+
+// 如果方法需要多个参数，直接以数组形式传递即可
+pageB_Server.exec('epoint.alert', ['系统提醒', '请检查内容是否完整']);
+
+// 如果被调用的方法是异步的，且返回值的是 thenable 对象，还可以异步拿到返回结果
+pageB_Server.exec('pageInterface.getRemoteData', [{
+   date: '2021-06-18'
+}]).then(function (data) {
+   // 这个 data 就是B页面发请获取到的数据
+});
+```
+
 ### get
 
 获取属性值
 
+```js
+/**
+ * 获取属性值
+ * @param {string} property 属性路径
+ * @param {undefined | (error, result)=>{}} callback 回调函数
+ * @returns
+ */
+get(property, callback) 
+```
 
 ### set
 
 设置属性值
 
+```js
+/**
+ * 设置属性值
+ * @param {string} property 要设置的属性路径， eg: "someObject.someProperty
+ * @param {any} value 要设置的属性的值
+ * @param {undefined | (err, any)=> {}} callback 设置成功的回调函数
+ * @returns
+ */
+set(property, value, callback)
+```
 
 ## 设计理念
+
+`postMessage` 实际是上提供的消息通信的方案，跨域调用的情况下，A 调用 B ，实际上是需要 A 发送消息给 B ， B 在收到消息验证无误后自己调用后，再将消息回传给 A ，从而完成跨域调用。
+
+整个过程其实非常像客户端发请求，服务端鉴权做出响应。A 作为客户端发起请请求， B 作为服务端提供服务。
