@@ -9,6 +9,41 @@ import {
 import Server from './server';
 import MessageRequest from './request';
 
+//#region
+if (typeof Object.assign != 'function') {
+  // Must be writable: true, enumerable: false, configurable: true
+  Object.defineProperty(Object, 'assign', {
+    value: function assign(target: any) {
+      // .length of function is 2
+      'use strict';
+      if (target == null) {
+        // TypeError if undefined or null
+        throw new TypeError('Cannot convert undefined or null to object');
+      }
+
+      let to = Object(target);
+
+      for (var index = 1; index < arguments.length; index++) {
+        var nextSource = arguments[index];
+
+        if (nextSource != null) {
+          // Skip over if undefined or null
+          for (let nextKey in nextSource) {
+            // Avoid bugs when hasOwnProperty is shadowed
+            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+              to[nextKey] = nextSource[nextKey];
+            }
+          }
+        }
+      }
+      return to;
+    },
+    writable: true,
+    configurable: true,
+  });
+}
+//#endregion
+
 const handles: any[] = [];
 function handleMessageIn(ev: MessageEvent) {
   // 针对服务来源进行校验 return false 则不提供服务
@@ -28,14 +63,31 @@ function listen(ev: MessageEvent) {
   const data = ev.data;
   // if (data && /^epoint/.test(data.type)) {
   if (data && data.pipeline && data.type) {
-    // log(data);
     handleMessageIn(ev);
   }
 }
 // eslint-disable-next-line
 (self || window).addEventListener('message', listen);
 
-new Server(handles);
+const server = new Server();
+
+handles.push(
+  (data: RequestMessageData | ResponseMessageData, ev: MessageEvent) => {
+    if (/_request$/.test(data.type)) {
+      // 作为服务端 检查做响应处理
+      return server.handle(data as RequestMessageData, ev);
+    }
+
+    // 作为客户端 监听接收服务端给回来的响应
+    for (let key in Pipeline.instance) {
+      if (!hasKey(Pipeline.instance, key)) continue;
+      if (data.pipeline === key) {
+        Pipeline.instance[key]._handleResponse(data as ResponseMessageData);
+        break;
+      }
+    }
+  }
+);
 
 const hasKey = (obj: Object, key: string | number): boolean => {
   return Object.prototype.hasOwnProperty.call(obj, key);
@@ -77,7 +129,6 @@ class Pipeline {
     this.target = target;
     this.option = Object.assign({}, Pipeline.defaultOption, option);
     this.store = {};
-    this.initListener();
   }
 
   static getInstance(target: WindowProxy): false | Pipeline {
@@ -87,14 +138,6 @@ class Pipeline {
       }
     }
     return false;
-  }
-
-  initListener() {
-    handles.push((data: ResponseMessageData) => {
-      if (data.pipeline === this._id) {
-        this._handleResponse(data);
-      }
-    });
   }
 
   private sendRequest(
@@ -110,16 +153,12 @@ class Pipeline {
     }
 
     return new Promise((resolve, reject) => {
-      // 发送请求
-      // todo DOMException 异常
-      request.send();
       // 记录
       // this.store[id].data = { request: request.data };
       this.store[id].reject = reject;
       this.store[id].resolve = resolve;
 
       if (this.debug) {
-        // console.log(this.store[id].data);
         log(request.data);
       }
       // 超时 处理
@@ -128,6 +167,9 @@ class Pipeline {
           this._handleTimeout(request.data);
         }, this.option.timeout);
       }
+      // 发送请求
+      // todo DOMException 异常
+      request.send();
     });
   }
   /**

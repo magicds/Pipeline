@@ -1,6 +1,6 @@
 # Pipeline
 
-跨域通信的解决方案，基于 `postMessage` 实现，可方便的跨页面调用方法、获取值、设置值。
+跨域通信的解决方案，基于 `postMessage` 实现，即时是在跨域的情况下，也可方便的跨页面调用方法、获取值、设置值。
 
 ## 使用指南
 
@@ -14,8 +14,10 @@
 
 详情参考 [./example/index.html](./example/index.html);
 
+需要 Promise 支持，若是IE浏览器需要引入Promise支持。
 ## Api
 
+注意，基于 `postMessage ` 发送消息再监听拿到结果，因此所有 api 均是异步的，均会返回 Promise .
 ### exec
 
 调用方法
@@ -49,7 +51,7 @@ pageB_Server.exec('obj.print', '来自A页面的调用').then(function (result) 
 // 如果方法需要多个参数，直接以数组形式传递即可
 pageB_Server.exec('epoint.alert', ['系统提醒', '请检查内容是否完整']);
 
-// 如果被调用的方法是异步的，且返回值的是 thenable 对象，还可以异步拿到返回结果
+// 如果被调用的方法是异步的，且返回值的是 thenable 对象，还可以拿到异步返回结果
 pageB_Server.exec('pageInterface.getRemoteData', [{
    date: '2021-06-18'
 }]).then(function (data) {

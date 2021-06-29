@@ -16,7 +16,7 @@
         <button onclick="exec_inner()">调用内部的方法</button>
         <button onclick="exec_inner2()">调用内部的方法并获取结果</button>
 
-        <button>调用内部异步方法并获取结果</button>
+        <button onclick="exec_ajax()">调用内部异步方法并获取结果</button>
         <p></p>
         <button onclick="get_value()">获取内部变量obj.name的值</button>
         <button onclick="set_value()">修改内部变量obj.name的值</button>
@@ -26,6 +26,7 @@
     <div>
         <button onclick="worker_exec()">调用worker中的方法</button>
     </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/es6-promise/4.2.8/es6-promise.auto.min.js"></script>
     <script src="../dist/pipeline.umd.development.js"></script>
     <script>
         var p = new Pipeline(document.getElementById('iframe').contentWindow);
@@ -42,14 +43,21 @@
         */
         function toggleDebug(btn) {
             if (p.debug) {
-                p.debug = p2.debug = false;
+                if (window.Worker) {
+                    p.debug = p2.debug = false;
+                } else {
+                    p.debug = false;
+                }
                 btn.textContent = '开启调试模式'
             } else {
-                p.debug = p2.debug = true;
+                if (window.Worker) {
+                    p.debug = p2.debug = true;
+                } else {
+                    p.debug = true;
+                }
                 btn.textContent = '关闭调试模式'
             }
         }
-
 
         function exec_inner() {
             p.exec('log', window.prompt('请输入内容', '外部参数'));
@@ -57,6 +65,12 @@
         function exec_inner2() {
             p.exec('log2', window.prompt('请输入内容', '外部参数')).then(function (data) {
                 alert('内部输入框的值是：' + data);
+            });
+        }
+
+        function exec_ajax() {
+            p.exec('pageInterface.getRemoteData', [{ a: 1, b: 2, date: new Date() }]).then(function (data) {
+                alert(JSON.stringify(data, 0, 2));
             });
         }
 
@@ -75,17 +89,23 @@
     </script>
     <script>
         // work 中的支持 ==============================
-        var workerJs = new Worker('./worker.js');
-        var p2 = new Pipeline(workerJs);
-        Pipeline.initWorkerListen(workerJs);
+        if (window.Worker) {
+            var workerJs = new Worker('./worker.js');
+            var p2 = new Pipeline(workerJs);
+            Pipeline.initWorkerListen(workerJs);
 
-        function worker_exec() {
-            p2.exec('Util.genderRandomArray', window.prompt('请输入要生成随机数组的长度', '1000000')).then(function (data) {
-                alert('随机数组生产成功，请在控制台查看');
-                console.log(data);
-            });
-        };
+            function worker_exec() {
+                p2.exec('Util.genderRandomArray', window.prompt('请输入要生成随机数组的长度', '1000000')).then(function (data) {
+                    alert('随机数组生产成功，请在控制台查看');
+                    console.log(data);
+                });
+            };
+        }
     </script>
+
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/default.min.css">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/dracula.min.css">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/highlight.min.js"></script>
 
     <script src="./md.js"></script>
     <script>
@@ -101,10 +121,14 @@
         xhr.onload = function () {
             console.log(xhr);
             var txt = document.createElement('textarea');
+            txt.id = 'doc';
             txt.setAttribute('md-auto', '');
-            txt.value = xhr.responseText;
+            txt.value = xhr.responseText.replace(/\.\/example\//g, '');
             document.body.appendChild(txt);
             autoRender();
+            [].slice.call(document.querySelectorAll('pre > code[class*="language-"]')).forEach(function (item) {
+                hljs.highlightElement(item);
+            });
         }
         xhr.open('GET', '../README.md?T=' + +new Date());
         xhr.send()

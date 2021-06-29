@@ -6,11 +6,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iframe</title>
+    <script src="./jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
     <button id="inner_btn">内部按钮</button>
     <input type="text" id="input" value="这是内部页面的输入框">
+    <script src="https://cdn.bootcdn.net/ajax/libs/es6-promise/4.2.8/es6-promise.auto.min.js"></script>
     <script src="../dist/pipeline.umd.development.js"></script>
     <script>
 
@@ -41,8 +43,8 @@
 
         var pageInterface = {
             getRemoteData: function (params) {
-                return Util.ajax({
-                    url: 'xxx',
+                return $.ajax({
+                    url: './data.json',
                     data: $.extend({
                         pageUrl: location.href
                     }, params)

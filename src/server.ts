@@ -13,21 +13,7 @@ const isArray = (obj: any): boolean => {
 
 /*eslint no-new-func: "off"*/
 class Server {
-  isListening: boolean;
-
-  constructor(handles: any[]) {
-    this.isListening = true;
-    handles.push((data: RequestMessageData, ev: MessageEvent) => {
-      if (!this.isListening) {
-        return;
-      }
-
-      // 执行的请求
-      this.handle(data, ev);
-    });
-  }
-
-  private handle(data: RequestMessageData, ev: MessageEvent) {
+  handle(data: RequestMessageData, ev: MessageEvent) {
     if (data.type === 'exec_request') {
       this.handleExec(data, ev);
       return;
