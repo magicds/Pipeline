@@ -25,7 +25,9 @@ class MessageRequest {
     this.data.pipeline = data.pipeline;
   }
   send() {
-    const isWorker = typeof window.Worker === 'function' && this.target instanceof window.Worker;
+    const isWorker =
+      typeof window.Worker === 'function' &&
+      this.target instanceof window.Worker;
     if (isWorker) {
       if (this.option.transfer) {
         this.target.postMessage(this.data, this.option.transfer);
